@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BDIX Server Tester</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #fff;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .progress-bar {
+      width: 50%;
+      background-color: #444;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+      height: 20px;
+      margin: 20px auto;
+    }
+
+    .progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      border-radius: 5px;
+      background-color: #4caf50;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      width: 100%;
+      visibility: hidden;
+    }
+
+    .card {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+      width: 80%;
+      max-width: 600px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .website-info {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 100%;
+    }
+
+    .website-name {
+      color: #fff;
+      font-weight: bold;
+      width: 33%;
+    }
+
+    .accessible-button,
+    .inaccessible-button,
+    .visit-button {
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: background-color 0.3s ease;
+      background-color: transparent;
+      margin-right: 0;
+      flex-grow: 1;
+      margin: 0 5px;
+      width: 80px;
+      text-align: center;
+    }
+
+    .accessible-button:hover,
+    .inaccessible-button:hover,
+    .visit-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .accessible-button {
+      color: #4caf50;
+      border-color: #4caf50;
+    }
+
+    .inaccessible-button {
+      color: #f44336;
+      border-color: #f44336;
+    }
+
+    .visit-button {
+      background-color: #2980b9;
+      color: #fff;
+      border: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .visit-button:hover {
+      background-color: #1f6698;
+    }
+
+    .btn-toggle {
+      margin-bottom: 20px;
+      display: block;
+      margin: 20px auto;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1>BDIX Server Tester</h1>
+    <button onclick="testWebsiteResponses()" class="btn btn-primary btn-toggle">Test</button>
+    <div class="custom-control custom-switch">
+      <input type="checkbox" class="custom-control-input" id="toggleSwitch" onchange="toggleFilter()">
+      <label class="custom-control-label" for="toggleSwitch">Show Reachable Sites</label>
+    </div>
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="progress-text" id="progressText"></div>
+    <div class="container" id="container">
+      <!-- Cards will appear here -->
+    </div>
+  </div>
+
+  <script>
+    const websites = [
+      "https://www.example.com",
+      "https://www.google.com",
+      "http://103.222.20.150",
+      "https://www.googlfcchfhge.com",
+      "https://www.googchle.com",
+      "https://www.openai.com"
+    ];
+
+    let showOnlyReachableFlag = false;
+
+    function testWebsiteResponses() {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      container.style.visibility = 'visible';
+
+      const progress = document.getElementById('progress');
+      const progressText = document.getElementById('progressText');
+      let checkedWebsites = 0;
+      let accessibleWebsites = 0;
+
+      websites.forEach((website, index) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        container.appendChild(card);
+
+        const websiteInfo = document.createElement('div');
+        websiteInfo.classList.add('website-info');
+        card.appendChild(websiteInfo);
+
+        const websiteName = document.createElement('p');
+        websiteName.classList.add('website-name');
+        const name = website.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
+        websiteName.innerText = name;
+        websiteInfo.appendChild(websiteName);
+
+        fetch(website)
+          .then(response => {
+            const button = document.createElement('button');
+            const isAccessible = response.ok;
+            button.classList.add(isAccessible ? 'accessible-button' : 'inaccessible-button');
+            button.innerText = isAccessible ? 'Accessible' : 'Inaccessible';
+            websiteInfo.appendChild(button);
+
+            const visitButton = document.createElement('a');
+            visitButton.classList.add('visit-button');
+            visitButton.href = website;
+            visitButton.target = '_blank';
+            const visitIcon = document.createElement('i');
+            visitIcon.classList.add('fas', 'fa-external-link-alt');
+            visitButton.appendChild(visitIcon);
+            visitButton.innerHTML += ' Visit Website';
+            websiteInfo.appendChild(visitButton);
+
+            checkedWebsites++;
+            if (isAccessible) accessibleWebsites++;
+
+            const progressPercentage = (checkedWebsites / websites.length) * 100;
+            progress.style.width = `${progressPercentage}%`;
+            progressText.innerText = `Accessible: ${accessibleWebsites} / Checked: ${checkedWebsites} / Total: ${websites.length}`;
+          })
+          .catch(error => {
+            const button = document.createElement('button');
+            button.classList.add('inaccessible-button');
+            button.innerText = 'Inaccessible';
+            websiteInfo.appendChild(button);
+
+            const visitButton = document.createElement('a');
+            visitButton.classList.add('visit-button');
+            visitButton.href = website;
+            visitButton.target = '_blank';
+            const visitIcon = document.createElement('i');
+            visitIcon.classList.add('fas', 'fa-external-link-alt');
+            visitButton.appendChild(visitIcon);
+            visitButton.innerHTML += ' Visit Website';
+            websiteInfo.appendChild(visitButton);
+
+            checkedWebsites++;
+
+            const progressPercentage = (checkedWebsites / websites.length) * 100;
+            progress.style.width = `${progressPercentage}%`;
+            progressText.innerText = `Accessible: ${accessibleWebsites} / Checked: ${checkedWebsites} / Total: ${websites.length}`;
+          });
+      });
+    }
+
+    function toggleFilter() {
+      showOnlyReachableFlag = !showOnlyReachableFlag;
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        if (showOnlyReachableFlag && !card.querySelector('.accessible-button')) {
+          card.style.display = 'none';
+        } else {
+          card.style.display = 'flex';
+        }
+      });
+    }
+  </script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
